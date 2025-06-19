@@ -10,7 +10,6 @@ import { URL } from 'url';
 
 const prisma = new PrismaClient();
 
-const callbackURL = process.env.GOOGLE_CALLBACK_URL;
 
 // Configure Passport for Google OAuth
 passport.use(
@@ -18,7 +17,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      callbackURL: callbackURL,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
       passReqToCallback: true,
       scope: ['profile', 'email']
     },
@@ -276,6 +275,14 @@ export const googleAuthCallback = [
         { expiresIn: '1h' }
       );
 
+      // Set the JWT in a cookie
+      res.cookie('jwt', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: "none",
+        maxAge: 3600000, // 1 hour
+      });
+
       // Parse state if it exists
       let returnTo = '/';
       if (req.query.state) {
@@ -288,18 +295,10 @@ export const googleAuthCallback = [
           console.error('Error parsing state:', e);
         }
       }
-
-      // Set the JWT in a cookie
-      res.cookie('jwt', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 3600000, // 1 hour
-      });
-
+      
       // Redirect to the frontend without token query param
-      const frontendUrl = process.env.FRONTEND_URL as string;
-      const redirectUrl = new URL(returnTo, frontendUrl);
+      const redirectUrl = new URL(returnTo, process.env.FRONTEND_URL as string);
+      console.log('Redirecting to:', redirectUrl.toString());
       return res.redirect(redirectUrl.toString());
     } catch (error) {
       console.error('Google OAuth callback error:', error);

@@ -3,8 +3,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import cookieParser from 'cookie-parser';
+import session from 'express-session';
 import passport from 'passport';
 
+declare module 'express-session' {
+  interface SessionData {
+    user?: any;
+    returnTo?: string;
+  }
+}
 
 import authRouter from './auth_app/routes/auth.route';
 import communityRouter from './community/routes/index';
@@ -26,6 +33,15 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+//session
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || "your-session-secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());

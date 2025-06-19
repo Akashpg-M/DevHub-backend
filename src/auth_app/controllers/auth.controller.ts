@@ -156,7 +156,6 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
 // --------------------- LOGIN ---------------------
 export const login = async (req: Request, res: Response): Promise<Response | void> => {
   try {
-    console.log('Login attempt with body:', req.body);
     
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -215,7 +214,6 @@ export const login = async (req: Request, res: Response): Promise<Response | voi
       provider: user.provider
     };
 
-    console.log('Login successful, sending response for user:', user.id);
     res.status(200).json({
       success: true,
       data: userData

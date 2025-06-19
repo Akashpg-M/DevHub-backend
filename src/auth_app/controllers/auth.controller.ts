@@ -11,7 +11,6 @@ import { URL } from 'url';
 const prisma = new PrismaClient();
 
 const callbackURL = process.env.GOOGLE_CALLBACK_URL;
-console.log('Google OAuth callback URL:', callbackURL);
 
 // Configure Passport for Google OAuth
 passport.use(
@@ -25,13 +24,6 @@ passport.use(
     },
     async (_req, _accessToken, _refreshToken, profile, done) => {
       try {
-        console.log('Google OAuth profile received:', {
-          id: profile.id,
-          displayName: profile.displayName,
-          emails: profile.emails,
-          provider: profile.provider,
-          _raw: profile._raw
-        });
 
         if (!profile.emails?.[0]?.value) {
           console.error('No email provided by Google OAuth');
@@ -47,7 +39,6 @@ passport.use(
 
         if (!user) {
           // Create new user if not exists
-          console.log('Creating new user for Google OAuth email:', email);
           user = await prisma.user.create({
             data: {
               name: profile.displayName || email.split('@')[0],
@@ -57,14 +48,10 @@ passport.use(
               profilePicture: profile.photos?.[0]?.value || null,
             },
           });
-          console.log('New user created:', { id: user.id, email: user.email });
         } else if (user.provider !== AuthProvider.GOOGLE) {
           // User exists but with different provider
           const errorMsg = `Email already in use with ${user.provider} sign-in method`;
-          console.error(errorMsg);
           return done(new Error(errorMsg), undefined);
-        } else {
-          console.log('Existing user found:', { id: user.id, email: user.email });
         }
 
         return done(null, user);
@@ -162,7 +149,6 @@ export const signUp = async (req: Request, res: Response): Promise<void> => {
       role: newUser.role,
     });
   } catch (error: unknown) {
-    console.error("Error in signUp:", error instanceof Error ? error.message : "Unknown error");
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -182,7 +168,6 @@ export const login = async (req: Request, res: Response): Promise<Response | voi
     }
 
     const { email, password }: LoginInput = parsed.data;
-    console.log('Looking for user with email:', email);
 
     const user = await prisma.user.findUnique({ 
       where: { email },
@@ -212,17 +197,14 @@ export const login = async (req: Request, res: Response): Promise<Response | voi
       }) as Response;
     }
 
-    console.log('User found, comparing passwords...');
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log('Password mismatch for user:', user.id);
       return res.status(400).json({ 
         success: false, 
         message: "Invalid email or password" 
       }) as Response;
     }
 
-    console.log('Password match, generating token for user:', user.id);
     generateToken({ id: user.id, role: user.role }, res);
 
     const userData = {
@@ -257,7 +239,6 @@ export const googleAuth = (req: Request, res: Response, next: NextFunction) => {
     const returnTo = req.query.returnTo || '/';
     const state = Buffer.from(JSON.stringify({ returnTo })).toString('base64');
     
-    console.log('Initiating Google OAuth flow with returnTo:', returnTo);
     
     const options = {
       scope: ['profile', 'email'],

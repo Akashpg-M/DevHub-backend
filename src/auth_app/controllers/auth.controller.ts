@@ -103,7 +103,7 @@ export const generateToken = (user: { id: string; role: UserRole }, res: Respons
   );
   res.cookie("jwt", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: true,
     sameSite: "none",
     maxAge: 3600000, // 1 hour
     path : "/", // To Ensure cookie is accessible on all routes

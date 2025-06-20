@@ -106,6 +106,7 @@ export const generateToken = (user: { id: string; role: UserRole }, res: Respons
     secure: process.env.NODE_ENV === "production",
     sameSite: "none",
     maxAge: 3600000, // 1 hour
+    path : "/", // To Ensure cookie is accessible on all routes
   });
 };
 
@@ -281,6 +282,7 @@ export const googleAuthCallback = [
         secure: process.env.NODE_ENV === 'production',
         sameSite: "none",
         maxAge: 3600000, // 1 hour
+        path: "/", // To Ensure cookie is accessible on all routes
       });
 
       // Parse state if it exists
